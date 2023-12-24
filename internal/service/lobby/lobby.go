@@ -3,7 +3,6 @@ package lobby
 import (
 	"sync"
 
-	ws "github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/server"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
 )
 
@@ -11,22 +10,22 @@ type Lobby struct {
 	Name        string
 	mu          sync.Mutex
 	hub         *hub.Hub
-	Connections map[string]*ws.WsConnection
+	Connections map[string]*hub.WsConnection
 	Canvas      *Canvas
 	Chat        *Chat
 }
 
-func NewLobby(name string, hub *hub.Hub) *Lobby {
+func NewLobby(name string, currHub *hub.Hub) *Lobby {
 	return &Lobby{
 		Name:        name,
-		Connections: make(map[string]*ws.WsConnection), // <-- добавленная запятая после этой строки
-		hub:         hub,
+		Connections: make(map[string]*hub.WsConnection),
+		hub:         currHub,
 		Canvas:      NewCanvas(name),
 		Chat:        NewChat(name),
 	}
 }
 
-func (lo *Lobby) AddConnection(conn *ws.WsConnection) {
+func (lo *Lobby) AddConnection(conn *hub.WsConnection) {
 	lo.mu.Lock()
 	defer lo.mu.Unlock()
 

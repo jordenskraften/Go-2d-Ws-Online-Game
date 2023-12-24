@@ -6,8 +6,9 @@ type Chat struct {
 }
 
 type ChatMessage struct {
-	Text string
-	Date string
+	Username string
+	Text     string
+	Date     string
 }
 
 func NewChat(name string) *Chat {
