@@ -23,3 +23,10 @@ func (h *Hub) AddConnection(conn *WsConnection) {
 
 	h.Connections[conn.Name] = conn
 }
+
+func (h *Hub) RemoveConnection(conn *WsConnection) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	delete(h.Connections, conn.Name)
+}
