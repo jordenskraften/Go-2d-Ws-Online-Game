@@ -1,21 +1,24 @@
-// В пакете hub
-package hub
+// ws это транспортный уровень по сути между клиентом и бизнес логикой
+// но пусть побудет пока тут :(
+package transport
 
 import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/entities"
+	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
 )
 
 type WsConnection struct {
 	Name string
-	hub  *Hub
+	hub  *hub.Hub
 	conn *websocket.Conn
 	send chan []byte
 }
@@ -36,7 +39,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *hub.Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Ошибка установки соединения WebSocket:", err)
@@ -45,11 +48,14 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 
 	wsConn := &WsConnection{
+		Name: generateRandomName(),
 		hub:  hub,
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
-	wsConn.hub.AddConnection(wsConn)
+	//вот этот метод переделать и структурку в хабе и гуд будет
+	wsConn.hub.AddConnection(wsConn.Name, wsConn.conn, wsConn.send)
+	defer wsConn.hub.RemoveConnection(wsConn.Name)
 	//надо добавить в лобби
 	//потом для теста в лобби отправить месейдж чату и канвасу
 
@@ -72,6 +78,7 @@ func ServeWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 		log.Println("Ошибка отправки информации о клиенте через WebSocket:", err)
 	}
 
+	//цикл прослушки
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -152,18 +159,16 @@ func (wsCon *WsConnection) ReadLoop() {
 	}
 }
 
-// Серверное приложение вызывает метод Upgrader.Upgrade из обработчика HTTP-запросов, чтобы получить *Conn:
-//методы WriteMessage и ReadMessage соединения, чтобы отправлять и получать сообщения в виде фрагментов байтов
-/*
-for {
-    messageType, p, err := conn.ReadMessage()
-    if err != nil {
-        log.Println(err)
-        return
-    }
-    if err := conn.WriteMessage(messageType, p); err != nil {
-        log.Println(err)
-        return
-    }
+func generateRandomName() string {
+	rand.Seed(time.Now().UnixNano())
+
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	nameLength := 7
+	nameBytes := make([]byte, nameLength)
+
+	for i := range nameBytes {
+		nameBytes[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(nameBytes)
 }
-*/
