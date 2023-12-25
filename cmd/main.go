@@ -38,9 +38,19 @@ func testing(ex *exchanger.Exchanger) {
 		ex.AddConnectionToLobby(conn, lobby)
 		log.Println("удалось добавить любой конект в любое лобби")
 		log.Println(lobby.Connections)
+		//
+		curLob := ex.GetUserLobby(conn)
+		log.Println("текущее лобби клиента " + conn.Name + " " + curLob.Name)
+		//
 		log.Println("теперь удалим этот конект с лобби")
-		lobby.RemoveConnection(conn.Name)
+		//ex.DeleteUserFromAllLobbies(conn)
+		curLob.RemoveConnection(conn.Name)
 		log.Println(lobby.Connections)
+		//
+		curLob = ex.GetUserLobby(conn)
+		if curLob != nil {
+			log.Println(curLob.Name)
+		}
 		log.Println("================================")
 	} else {
 		log.Println("не удалось добавить любой конект в любое лобби")

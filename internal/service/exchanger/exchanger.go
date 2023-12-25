@@ -59,7 +59,7 @@ func (ex *Exchanger) AddConnectionToLobby(conn *hub.ConnItem, lobby *lobby.Lobby
 
 }
 
-func (ex *Exchanger) RemoveonnectionFromLobby(connName string, lobbyName string) {
+func (ex *Exchanger) RemoveСonnectionFromLobby(connName string, lobbyName string) {
 	ex.mu.Lock()
 	defer ex.mu.Unlock()
 
@@ -68,14 +68,14 @@ func (ex *Exchanger) RemoveonnectionFromLobby(connName string, lobbyName string)
 	if lobby == nil {
 		return
 	}
-	log.Println(lobby)
+	//log.Println(lobby)
 
 	//в хабе аналогично ищем по имени есть ли такой конект
 	conn := ex.Hub.GetConnectionByName(connName)
 	if conn == nil {
 		return
 	}
-	log.Println(conn)
+	//log.Println(conn)
 
 	lobby.RemoveConnection(connName)
 }
@@ -92,3 +92,37 @@ func (ex *Exchanger) GetLobbyByName(name string) *lobby.Lobby {
 	}
 	return nil
 }
+
+func (ex *Exchanger) GetUserLobby(conn *hub.ConnItem) *lobby.Lobby {
+	ex.mu.Lock()
+	defer ex.mu.Unlock()
+
+	//найти лобби в котором сидит юзер
+	//ключевой метод, пригодится понимать куда отправлять меседж юзера
+
+	for _, lobby := range ex.Lobbies {
+		for _, user := range lobby.Connections {
+			if conn == user {
+				log.Printf("нашли юзеру %d лобби %d", conn.Name, lobby.Name)
+				return lobby
+			}
+		}
+	}
+	log.Printf("не нашли юзеру %d лобби", conn.Name)
+	return nil
+}
+
+func (ex *Exchanger) DeleteUserFromAllLobbies(conn *hub.ConnItem) {
+	ex.mu.Lock()
+	defer ex.mu.Unlock()
+
+	for {
+		lobby := ex.GetUserLobby(conn)
+		if lobby == nil {
+			return
+		}
+		lobby.RemoveConnection(conn.Name)
+	}
+}
+
+//метод выбирающий в какое лобби писать месейдж

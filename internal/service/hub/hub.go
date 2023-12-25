@@ -1,7 +1,6 @@
 package hub
 
 import (
-	"log"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -34,13 +33,15 @@ func (h *Hub) AddConnection(name string, conn *websocket.Conn, send chan []byte)
 		conn: conn,
 		send: send,
 	}
-	log.Println("Список подключений на сервере после подключения:")
-	str := ""
-	for name := range h.Connections {
-		str += name + ", "
-	}
-	log.Println(str)
-	log.Println("-----------------------")
+	/*
+		log.Println("Список подключений на сервере после подключения:")
+		str := ""
+		for name := range h.Connections {
+			str += name + ", "
+		}
+		log.Println(str)
+		log.Println("-----------------------")
+	*/
 
 	//трайнем подключить челика к лобби
 }
@@ -50,13 +51,15 @@ func (h *Hub) RemoveConnection(name string) {
 	defer h.mu.Unlock()
 
 	delete(h.Connections, name)
-	log.Println("Список подключений на сервере после отсоединения:")
-	str := ""
-	for name := range h.Connections {
-		str += name + ", "
-	}
-	log.Println(str)
-	log.Println("-----------------------")
+	/*
+		log.Println("Список подключений на сервере после отсоединения:")
+		str := ""
+		for name := range h.Connections {
+			str += name + ", "
+		}
+		log.Println(str)
+		log.Println("-----------------------")
+	*/
 }
 
 func (h *Hub) GetConnectionByName(name string) *ConnItem {
@@ -65,7 +68,7 @@ func (h *Hub) GetConnectionByName(name string) *ConnItem {
 
 	for _, val := range h.Connections {
 		if val.Name == name {
-			log.Println("найден конект в хабе с именем " + name)
+			//log.Println("найден конект в хабе с именем " + name)
 			return val
 		}
 	}

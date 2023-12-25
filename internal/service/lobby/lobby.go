@@ -40,6 +40,15 @@ func (lo *Lobby) RemoveConnection(name string) {
 	delete(lo.Connections, name)
 }
 
-//вот здесь в чат и в лобби будут добавляться месейджи
-//и при добавлении еще будет отправляться в хаб список имен или конекшнов хз
-//по которым надо разослать через ws месейджи
+func (lo *Lobby) GetActiveConnectionsList() []*hub.ConnItem {
+	lo.mu.Lock()
+	defer lo.mu.Unlock()
+
+	list := make([]*hub.ConnItem, 0, len(lo.Connections))
+
+	for _, conn := range lo.Connections {
+		list = append(list, conn)
+	}
+
+	return list
+}
