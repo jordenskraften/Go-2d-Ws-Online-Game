@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket JSON Sender</title>
+</head>
+<body>
+    <textarea id="chatMessageInput" rows="5" cols="50">
+        {
+            "type": "ChatMessage",
+            "username": "Alice",
+            "date": "2023-12-25",
+            "text": "Hello, world!"
+        }
+    </textarea>
+    <br>
+    <button onclick="sendChatMessage()">Отправить ChatMessage JSON</button>
+    <br><br>
+    <textarea id="canvasInput" rows="5" cols="50">
+        {
+            "type": "Canvas", 
+            "positions": {
+                "Point1": {"x": 10, "y": 20},
+                "Point2": {"x": 30, "y": 40}
+            }
+        }
+    </textarea>
+    <br>
+    <button onclick="sendCanvas()">Отправить Canvas JSON</button>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8080/ws');
+
+        // Функция для отправки ChatMessage
+// Функция для отправки ChatMessage
+function sendChatMessage() {
+    const chatMessageInput = document.getElementById('chatMessageInput').value;
+
+    try {
+        const chatMessageJson = JSON.parse(chatMessageInput);
+        console.log('Отправляемый ChatMessage JSON:', chatMessageJson); // Добавленная строка
+
+        socket.send(JSON.stringify(chatMessageJson));
+        console.log('Отправлено ChatMessage:', chatMessageJson);
+    } catch (error) {
+        console.error('Ошибка при отправке ChatMessage:', error);
+    }
+}
+
+// Функция для отправки Canvas
+function sendCanvas() {
+    const canvasInput = document.getElementById('canvasInput').value;
+
+    try {
+        const canvasJson = JSON.parse(canvasInput);
+        console.log('Отправляемый Canvas JSON:', canvasJson); // Добавленная строка
+
+        socket.send(JSON.stringify(canvasJson));
+        console.log('Отправлено Canvas:', canvasJson);
+    } catch (error) {
+        console.error('Ошибка при отправке Canvas:', error);
+    }
+}
+
+
+        // Остальной код для обработки WebSocket остается тем же
+        // ...
+    </script>
+</body>
+</html>

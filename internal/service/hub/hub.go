@@ -18,6 +18,10 @@ func NewHub(name string) *Hub {
 }
 
 func (h *Hub) AddConnection(conn *WsConnection) {
+	//чтобы избавиться от импорта зависимости ws
+	//можно сюда в аргументы вписать поля из примитивов ws connect
+	//например канал send
+	//и собрать новый конект тут из этих примитивов, добавив его в слайс
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
