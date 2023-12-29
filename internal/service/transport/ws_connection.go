@@ -39,7 +39,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // serveWs handles websocket requests from the peer.
-func ServeWs(hub *hub.Hub, w http.ResponseWriter, r *http.Request) {
+func ServeWs(hub *hub.Hub, cm *ConnectionsManager, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Ошибка установки соединения WebSocket:", err)
@@ -77,6 +77,10 @@ func ServeWs(hub *hub.Hub, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("Ошибка отправки информации о клиенте через WebSocket:", err)
 	}
+
+	//добавим юзера в стартовое лобби
+	cm.SetupUser(wsConn.Name, *wsConn.hub)
+	defer cm.RemoveUser(wsConn.Name, *wsConn.hub)
 
 	//цикл прослушки
 	var wg sync.WaitGroup

@@ -1,6 +1,7 @@
 package lobby
 
 import (
+	"log"
 	"sync"
 
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
@@ -37,6 +38,7 @@ func (lo *Lobby) RemoveConnection(name string) {
 	lo.mu.Lock()
 	defer lo.mu.Unlock()
 
+	log.Printf("удалили юзера из %s лобби %s", lo.Name, name)
 	delete(lo.Connections, name)
 }
 

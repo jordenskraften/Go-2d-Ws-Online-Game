@@ -14,7 +14,7 @@ type ConnItem struct {
 type Hub struct {
 	Name        string
 	Connections map[string]*ConnItem
-	mu          sync.Mutex
+	mu          sync.RWMutex
 }
 
 func NewHub(name string) *Hub {
@@ -33,17 +33,6 @@ func (h *Hub) AddConnection(name string, conn *websocket.Conn, send chan []byte)
 		conn: conn,
 		send: send,
 	}
-	/*
-		log.Println("Список подключений на сервере после подключения:")
-		str := ""
-		for name := range h.Connections {
-			str += name + ", "
-		}
-		log.Println(str)
-		log.Println("-----------------------")
-	*/
-
-	//трайнем подключить челика к лобби
 }
 
 func (h *Hub) RemoveConnection(name string) {
@@ -51,33 +40,29 @@ func (h *Hub) RemoveConnection(name string) {
 	defer h.mu.Unlock()
 
 	delete(h.Connections, name)
-	/*
-		log.Println("Список подключений на сервере после отсоединения:")
-		str := ""
-		for name := range h.Connections {
-			str += name + ", "
-		}
-		log.Println(str)
-		log.Println("-----------------------")
-	*/
 }
 
 func (h *Hub) GetConnectionByName(name string) *ConnItem {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 
-	for _, val := range h.Connections {
-		if val.Name == name {
-			//log.Println("найден конект в хабе с именем " + name)
-			return val
-		}
+	if conn, ok := h.Connections[name]; ok {
+		return conn
 	}
 	return nil
 }
 
+func (h *Hub) IsConnectionInHub(name string) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	_, ok := h.Connections[name]
+	return ok
+}
+
 func (h *Hub) GetAnyConnection() *ConnItem {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+	h.mu.RLock()
+	defer h.mu.RUnlock()
 
 	for _, val := range h.Connections {
 		return val // Возвращаем первое доступное соединение
