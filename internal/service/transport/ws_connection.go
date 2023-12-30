@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/entities"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
 )
 
@@ -87,12 +86,12 @@ func ServeWs(hub *hub.Hub, cm *ConnectionsManager, w http.ResponseWriter, r *htt
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		wsConn.ReadLoop()
+		wsConn.ReadLoop(cm)
 	}()
 	wg.Wait() // Ждем завершения работы горутины ReadLoop перед закрытием соединения
 }
 
-func (wsCon *WsConnection) ReadLoop() {
+func (wsCon *WsConnection) ReadLoop(cm *ConnectionsManager) {
 	defer wsCon.conn.Close()
 
 	for {
@@ -101,64 +100,8 @@ func (wsCon *WsConnection) ReadLoop() {
 		if err != nil {
 			log.Printf("Error reading JSON: %v", err)
 			break
-		}
-
-		if msgType, ok := msgData["type"]; ok {
-			switch msgType {
-			case "ChatMessage":
-				username, usernameExists := msgData["username"].(string)
-				text, textExists := msgData["text"].(string)
-				date, dateExists := msgData["date"].(string)
-
-				if !usernameExists || !textExists || !dateExists {
-					log.Println("Incomplete ChatMessage data")
-					continue
-				}
-
-				message := entities.ChatMessage{
-					Username: username,
-					Text:     text,
-					Date:     date,
-				}
-				log.Println("Received ChatMessage object:", message)
-
-			case "Canvas":
-				positionsData, ok := msgData["positions"].(map[string]interface{})
-				if !ok {
-					log.Println("Error obtaining position data for Canvas")
-					continue
-				}
-
-				positions := make(map[string]entities.Position)
-				for key, val := range positionsData {
-					posData, ok := val.(map[string]interface{})
-					if !ok {
-						log.Println("Error processing position data for Canvas")
-						continue
-					}
-
-					x, xOk := posData["x"].(float64)
-					y, yOk := posData["y"].(float64)
-					if !xOk || !yOk {
-						log.Println("Error extracting coordinates for Canvas")
-						continue
-					}
-
-					position := entities.Position{
-						X: int(x),
-						Y: int(y),
-					}
-					positions[key] = position
-				}
-
-				canvas := entities.Canvas{
-					Positions: positions,
-				}
-				log.Println("Received Canvas object:", canvas)
-
-			default:
-				log.Println("Unknown message type")
-			}
+		} else {
+			cm.DistributeMessage(wsCon.Name, msgData)
 		}
 	}
 }

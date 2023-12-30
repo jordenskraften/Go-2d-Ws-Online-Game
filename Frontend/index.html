@@ -7,8 +7,7 @@
 <body>
     <textarea id="chatMessageInput" rows="5" cols="50">
         {
-            "type": "ChatMessage",
-            "username": "Alice",
+            "type": "ChatMessage", 
             "date": "2023-12-25",
             "text": "Hello, world!"
         }
@@ -16,17 +15,26 @@
     <br>
     <button onclick="sendChatMessage()">Отправить ChatMessage JSON</button>
     <br><br>
-    <textarea id="canvasInput" rows="5" cols="50">
+
+    <textarea id="positionInput" rows="5" cols="50">
         {
-            "type": "Canvas", 
-            "positions": {
-                "Point1": {"x": 10, "y": 20},
-                "Point2": {"x": 30, "y": 40}
-            }
+            "type": "Position", 
+            "x": 11,
+            "y": 22
         }
     </textarea>
     <br>
-    <button onclick="sendCanvas()">Отправить Canvas JSON</button>
+    <button onclick="sendPosition()">Отправить Canvas JSON</button>
+    <br><br>
+
+    <textarea id="lobbyCommand" rows="5" cols="50">
+        {
+            "type": "LobbyCommand", 
+            "LobbyName": "lobby#1"
+        }
+    </textarea>
+    <br>
+    <button onclick="sendLobbyCommand()">Отправить LobbyCommand JSON</button>
 
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
@@ -48,20 +56,34 @@ function sendChatMessage() {
 }
 
 // Функция для отправки Canvas
-function sendCanvas() {
-    const canvasInput = document.getElementById('canvasInput').value;
+function sendPosition() {
+    const positionInput = document.getElementById('positionInput').value;
 
     try {
-        const canvasJson = JSON.parse(canvasInput);
-        console.log('Отправляемый Canvas JSON:', canvasJson); // Добавленная строка
+        const positionInputJson = JSON.parse(positionInput);
+        console.log('Отправляемый PositionInput JSON:', positionInputJson); // Добавленная строка
 
-        socket.send(JSON.stringify(canvasJson));
-        console.log('Отправлено Canvas:', canvasJson);
+        socket.send(JSON.stringify(positionInputJson));
+        console.log('Отправлено PositionInput:', positionInputJson);
     } catch (error) {
-        console.error('Ошибка при отправке Canvas:', error);
+        console.error('Ошибка при отправке PositionInput:', error);
     }
 }
 
+// Функция для отправки LobbyCommand
+function sendLobbyCommand() {
+    const lobbyCommandInput = document.getElementById('lobbyCommand').value;
+
+    try {
+        const lobbyCommandInputJson = JSON.parse(lobbyCommandInput);
+        console.log('Отправляемый lobbyInput JSON:', lobbyCommandInputJson); // Добавленная строка
+
+        socket.send(JSON.stringify(lobbyCommandInputJson));
+        console.log('Отправлено lobbyInput:', lobbyCommandInputJson);
+    } catch (error) {
+        console.error('Ошибка при отправке lobbyInput:', error);
+    }
+}
 
         // Остальной код для обработки WebSocket остается тем же
         // ...

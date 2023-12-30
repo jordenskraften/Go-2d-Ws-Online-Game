@@ -19,7 +19,7 @@ func main() {
 	// MyExchanger.CreateLobby("lobby#2")
 	// MyExchanger.CreateLobby("lobby#3")
 	// log.Printf("%d, %d, %d", MyExchanger.Lobbies[0].Name, MyExchanger.Lobbies[1].Name, MyExchanger.Lobbies[2].Name)
-	go testing(MyExchanger)
+	//go testing(MyExchanger)
 	//-----------
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		transport.ServeWs(MyHub, MyConnectionsManages, w, r)

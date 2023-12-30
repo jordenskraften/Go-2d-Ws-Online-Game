@@ -9,7 +9,7 @@ import (
 
 type Lobby struct {
 	Name        string
-	mu          sync.Mutex
+	mu          sync.RWMutex
 	hub         *hub.Hub
 	Connections map[string]*hub.ConnItem
 	Canvas      *Canvas
@@ -43,8 +43,8 @@ func (lo *Lobby) RemoveConnection(name string) {
 }
 
 func (lo *Lobby) GetActiveConnectionsList() []*hub.ConnItem {
-	lo.mu.Lock()
-	defer lo.mu.Unlock()
+	lo.mu.RLock()
+	defer lo.mu.RUnlock()
 
 	list := make([]*hub.ConnItem, 0, len(lo.Connections))
 
