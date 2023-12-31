@@ -34,6 +34,9 @@
     </textarea>
     <br>
     <button onclick="sendLobbyCommand()">Отправить LobbyCommand JSON</button>
+    <br><br>
+
+    <textarea id="chatMessagesDisplay" rows="10" cols="50" readonly></textarea>
 
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
@@ -86,11 +89,21 @@ function sendLobbyCommand() {
 
         // Остальной код для обработки WebSocket остается тем же
         // ...
-        
+         
         socket.onmessage = function(event) {
             const message = JSON.parse(event.data); 
-            console.log('Received message:', message);
+            const messageType = message.type;
+
+            if (messageType === 'ChatMessageData') {
+                // Создаем строку с данными сообщения
+                const chatMessagesDisplay = document.getElementById('chatMessagesDisplay');
+                const messageContent = `${message.username}: ${message.text}: ${message.date}`;
+
+                // Устанавливаем строку с данными сообщения в текстовое поле chatMessagesDisplay
+                chatMessagesDisplay.value += messageContent + '\n';
+            }
         };
+
     </script>
 </body>
 </html>
