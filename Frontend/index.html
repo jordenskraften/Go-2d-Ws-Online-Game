@@ -102,6 +102,10 @@ function sendLobbyCommand() {
                 // Устанавливаем строку с данными сообщения в текстовое поле chatMessagesDisplay
                 chatMessagesDisplay.value += messageContent + '\n';
             }
+            
+            if (messageType === 'CanvasMessageData') {
+                console.log(message)
+            }
         };
 
     </script>

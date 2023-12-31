@@ -5,8 +5,9 @@ type ChatMessage struct {
 	Text string `json:"text"`
 }
 type Position struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+	Username string  `json:"username"`
+	X        float32 `json:"x"`
+	Y        float32 `json:"y"`
 }
 
 type LobbyCommand struct {
@@ -18,4 +19,9 @@ type ChatMessageData struct {
 	Username string `json:"username"`
 	Date     string `json:"date"`
 	Text     string `json:"text"`
+}
+
+type CanvasMessageData struct {
+	Type      string     `json:"type"`
+	Positions []Position `json:"positions"`
 }

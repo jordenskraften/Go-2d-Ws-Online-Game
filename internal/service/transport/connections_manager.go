@@ -88,11 +88,12 @@ func (cm *ConnectionsManager) DistributeMessage(username string, msgData map[str
 			}
 
 			position := entities.Position{
-				X: int(x),
-				Y: int(y),
+				X: float32(x),
+				Y: float32(y),
 			}
 			log.Println("Received Position object:", position)
 
+			cm.exchanger.BroadcastPositionMessage(conn, &position)
 		}
 	}
 }

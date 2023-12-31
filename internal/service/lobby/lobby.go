@@ -38,8 +38,9 @@ func (lo *Lobby) RemoveConnection(name string) {
 	lo.mu.Lock()
 	defer lo.mu.Unlock()
 
-	log.Printf("удалили юзера из %s лобби %s", lo.Name, name)
+	lo.Canvas.RemoveUser(name)
 	delete(lo.Connections, name)
+	log.Printf("удалили юзера из %s лобби %s", lo.Name, name)
 }
 
 func (lo *Lobby) GetActiveConnectionsList() []*hub.ConnItem {

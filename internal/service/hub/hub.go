@@ -106,3 +106,30 @@ func (h *Hub) BroadcastChatMessageToUserList(userlist []*ConnItem, username stri
 		}
 	}
 }
+
+// ----------
+func (h *Hub) BroadcastCanvasDataToUserList(userlist []*ConnItem, messagePayload entities.CanvasMessageData) {
+	//надо собрать json объект для отправки с полем type ChatMessage из аргументов стрингов
+	log.Println(messagePayload)
+
+	messageJSON, err := json.Marshal(messagePayload)
+	if err != nil {
+		log.Println("Error marshalling JSON in hub broadcast chat message to userlist:", err)
+		return
+	}
+
+	for _, user := range userlist {
+		for _, conn := range h.Connections {
+			if user.Name == conn.Name {
+				log.Printf("found user %s and sending him chatMessage from hub broadcast:", conn.Name)
+				//ну а тут происходит отправка если юзер в листе есть в конектах хаба с этим ником
+				//conn.conn.WriteJSON(messageJSON)
+				err := conn.conn.WriteMessage(websocket.TextMessage, messageJSON)
+				if err != nil {
+					log.Println("Error sending message to user:", err)
+					continue
+				}
+			}
+		}
+	}
+}

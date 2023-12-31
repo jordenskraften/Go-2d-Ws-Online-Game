@@ -5,7 +5,6 @@ package exchanger
 
 import (
 	"log"
-	"strings"
 	"sync"
 
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/entities"
@@ -195,13 +194,47 @@ func (ex *Exchanger) BroadcastChatMessage(conn *hub.ConnItem, msg *entities.Chat
 		// достаем список активных конектов в лобби
 		lobbyUsers := lobby.GetActiveConnectionsList()
 		//эт логирование списка юзеров лобби
-		userNames := make([]string, len(lobbyUsers))
-		for i, userConn := range lobbyUsers {
-			userNames[i] = userConn.Name
-		}
-		userListStr := strings.Join(userNames, ", ")
-		log.Printf("users in lobby %s list are: %s", lobby.Name, userListStr)
+		// userNames := make([]string, len(lobbyUsers))
+		// for i, userConn := range lobbyUsers {
+		// 	userNames[i] = userConn.Name
+		// }
+		// userListStr := strings.Join(userNames, ", ")
+		// log.Printf("users in lobby %s list are: %s", lobby.Name, userListStr)
 		// всему списку по вебсокету отправляет
 		ex.Hub.BroadcastChatMessageToUserList(lobbyUsers, chatMsg.Username, chatMsg.Text, chatMsg.Date)
+	}
+}
+
+func (ex *Exchanger) BroadcastPositionMessage(conn *hub.ConnItem, msg *entities.Position) {
+	//определяем лобби юзера
+	lobby := ex.GetUserLobby(conn)
+	if lobby == nil {
+		log.Printf("user %s has no lobby for broadcast chat message \n", conn.Name)
+		return
+	} else {
+		canvas := lobby.Canvas
+		if !canvas.IsUserInCanvas(conn.Name) {
+			canvas.AddUser(conn.Name, float32(msg.X), float32(msg.Y))
+		} else {
+			canvas.ChangeUserCoords(conn.Name, float32(msg.X), float32(msg.Y))
+		}
+		//теперь надо дернуть хаб чтобы он всем распространил месейдж
+		lobbyUsers := lobby.GetActiveConnectionsList()
+		canvasInfo := canvas.GetCanvasInfo()
+		canvasMsg := entities.CanvasMessageData{
+			Type:      "CanvasMessageData",
+			Positions: []entities.Position{},
+		}
+		for _, val := range canvasInfo {
+			canvasMsg.Positions = append(canvasMsg.Positions,
+				entities.Position{
+					Username: val.Name,
+					X:        val.X,
+					Y:        val.Y,
+				})
+		}
+
+		ex.Hub.BroadcastCanvasDataToUserList(lobbyUsers, canvasMsg)
+
 	}
 }
