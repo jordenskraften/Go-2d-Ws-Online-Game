@@ -12,3 +12,10 @@ type Position struct {
 type LobbyCommand struct {
 	LobbyName string `json:"lobby_name"`
 }
+
+type ChatMessageData struct {
+	Type     string `json:"type"`
+	Username string `json:"username"`
+	Date     string `json:"date"`
+	Text     string `json:"text"`
+}

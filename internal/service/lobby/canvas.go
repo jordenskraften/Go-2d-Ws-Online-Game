@@ -6,8 +6,9 @@ type Canvas struct {
 }
 
 type Position struct {
-	X int
-	Y int
+	Name string
+	X    int
+	Y    int
 }
 
 func NewCanvas(name string) *Canvas {

@@ -5,8 +5,10 @@ package exchanger
 
 import (
 	"log"
+	"strings"
 	"sync"
 
+	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/entities"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/lobby"
 )
@@ -178,7 +180,28 @@ func (ex *Exchanger) ChangeUserLobby(conn *hub.ConnItem, lobbyName string) {
 	log.Printf("finished changing lobby to user with name %s \n", conn.Name)
 }
 
-// методы реализующие логику от сообщений
-// смена лобби юзеру и отправка ему стартовых данных на клиент
-// чатовый меседж рассылаемый всем клиентам в лобби
-// координатное сообщение с рассылкой всем юзерам новое состояние канваса
+// --------------
+func (ex *Exchanger) BroadcastChatMessage(conn *hub.ConnItem, msg *entities.ChatMessage) {
+	//определяем лобби юзера
+	lobby := ex.GetUserLobby(conn)
+	if lobby == nil {
+		log.Printf("user %s has no lobby for broadcast chat message \n", conn.Name)
+		return
+	} else {
+		//достаем чат лобби
+		chat := lobby.Chat
+		// записываем в него меседж
+		chatMsg := chat.AddChatMessage(conn.Name, msg.Text)
+		// достаем список активных конектов в лобби
+		lobbyUsers := lobby.GetActiveConnectionsList()
+		//эт логирование списка юзеров лобби
+		userNames := make([]string, len(lobbyUsers))
+		for i, userConn := range lobbyUsers {
+			userNames[i] = userConn.Name
+		}
+		userListStr := strings.Join(userNames, ", ")
+		log.Printf("users in lobby %s list are: %s", lobby.Name, userListStr)
+		// всему списку по вебсокету отправляет
+		ex.Hub.BroadcastChatMessageToUserList(lobbyUsers, chatMsg.Username, chatMsg.Text, chatMsg.Date)
+	}
+}

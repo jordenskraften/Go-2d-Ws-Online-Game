@@ -68,17 +68,17 @@ func (cm *ConnectionsManager) DistributeMessage(username string, msgData map[str
 
 		case "ChatMessage":
 			text, textExists := msgData["text"].(string)
-			date, dateExists := msgData["date"].(string)
 
-			if !textExists || !dateExists {
+			if !textExists {
 				log.Println("Incomplete ChatMessage data")
 			}
 
 			message := entities.ChatMessage{
 				Text: text,
-				Date: date,
 			}
 			log.Println("Received ChatMessage object:", message)
+			//тута в чат запись
+			cm.exchanger.BroadcastChatMessage(conn, &message)
 
 		case "Position":
 			x, xOk := msgData["x"].(float64)
