@@ -9,9 +9,9 @@ type Canvas struct {
 }
 
 type Position struct {
-	Name string
-	X    float32
-	Y    float32
+	Username string
+	X        float32
+	Y        float32
 }
 
 func NewCanvas(name string) *Canvas {
@@ -38,8 +38,9 @@ func (ca *Canvas) AddUser(name string, x float32, y float32) {
 	defer ca.mu.Unlock()
 
 	ca.Positions[name] = &Position{
-		X: x,
-		Y: y,
+		Username: name,
+		X:        x,
+		Y:        y,
 	}
 }
 
@@ -57,8 +58,9 @@ func (ca *Canvas) ChangeUserCoords(name string, x float32, y float32) {
 	defer ca.mu.Unlock()
 
 	ca.Positions[name] = &Position{
-		X: x,
-		Y: y,
+		Username: name,
+		X:        x,
+		Y:        y,
 	}
 }
 

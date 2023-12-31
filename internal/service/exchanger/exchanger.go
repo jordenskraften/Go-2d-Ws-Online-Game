@@ -228,7 +228,7 @@ func (ex *Exchanger) BroadcastPositionMessage(conn *hub.ConnItem, msg *entities.
 		for _, val := range canvasInfo {
 			canvasMsg.Positions = append(canvasMsg.Positions,
 				entities.Position{
-					Username: val.Name,
+					Username: val.Username,
 					X:        val.X,
 					Y:        val.Y,
 				})

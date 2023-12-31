@@ -36,12 +36,15 @@
     <button onclick="sendLobbyCommand()">Отправить LobbyCommand JSON</button>
     <br><br>
 
+    <canvas id="canvas" width="400" height="300" style="border: 1px solid #000;"></canvas>
+    
     <textarea id="chatMessagesDisplay" rows="10" cols="50" readonly></textarea>
+
 
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
-
-        // Функция для отправки ChatMessage
+        const canvas = document.getElementById('canvas');
+ 
 // Функция для отправки ChatMessage
 function sendChatMessage() {
     const chatMessageInput = document.getElementById('chatMessageInput').value;
@@ -89,7 +92,27 @@ function sendLobbyCommand() {
 
         // Остальной код для обработки WebSocket остается тем же
         // ...
-         
+         // Добавляем обработчик события клика на канвасе
+        canvas.addEventListener('click', function(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            const positionData = {
+                type: 'Position',
+                x: x,
+                y: y
+            };
+
+            try {
+                socket.send(JSON.stringify(positionData));
+                console.log('Отправлены координаты клика:', positionData);
+            } catch (error) {
+                console.error('Ошибка при отправке координат клика:', error);
+            }
+        });
+
+
         socket.onmessage = function(event) {
             const message = JSON.parse(event.data); 
             const messageType = message.type;
@@ -104,10 +127,23 @@ function sendLobbyCommand() {
             }
             
             if (messageType === 'CanvasMessageData') {
-                console.log(message)
-            }
-        };
+                // Очистка канваса
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+                // Обработка каждой позиции в сообщении
+                message.positions.forEach(position => {
+                    // Рисование куба по координатам
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(position.x, position.y, 20, 20);
+
+                    // Отображение имени пользователя над кубом// Отображение имени пользователя над кубом
+                    ctx.font = "10px Arial";  
+                    ctx.fillText(position.username, position.x, position.y - 5); // Корректировка координат для отображения текста над кубом
+
+                });
+            }
+        }
     </script>
 </body>
 </html>

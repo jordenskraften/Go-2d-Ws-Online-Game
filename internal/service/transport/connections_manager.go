@@ -88,8 +88,9 @@ func (cm *ConnectionsManager) DistributeMessage(username string, msgData map[str
 			}
 
 			position := entities.Position{
-				X: float32(x),
-				Y: float32(y),
+				Username: conn.Name,
+				X:        float32(x),
+				Y:        float32(y),
 			}
 			log.Println("Received Position object:", position)
 
