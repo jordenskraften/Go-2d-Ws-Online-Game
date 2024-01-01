@@ -70,6 +70,13 @@ func (ex *Exchanger) RemoveСonnectionFromLobby(connName string, lobbyName strin
 	lobby.RemoveConnection(connName)
 }
 
+func (ex *Exchanger) GetAllActiveLobbies() []*lobby.Lobby {
+	ex.mu.RLock()
+	defer ex.mu.RUnlock()
+
+	return ex.Lobbies
+}
+
 func (ex *Exchanger) GetAnyLobby() *lobby.Lobby {
 	ex.mu.RLock()
 	defer ex.mu.RUnlock()
@@ -148,7 +155,14 @@ func (ex *Exchanger) SetupConnection(conn *hub.ConnItem) {
 
 	lobby.AddConnection(conn)
 	log.Printf("user %s added to lobby %s, lobby have that user? = %s\n", conn.Name, lobby.Name, lobby.Connections[conn.Name].Name)
-
+	//вот здесь надо список лобби взять и отдать конекшну
+	lobbies := ex.GetAllActiveLobbies()
+	lobbiesNames := make([]string, 0, len(lobbies))
+	for _, val := range lobbies {
+		lobbiesNames = append(lobbiesNames, val.Name)
+	}
+	log.Println(lobbiesNames)
+	ex.Hub.SendLobbiesListToConnestion(conn, lobbiesNames)
 }
 
 //метод который будет переключать юзеру лобби

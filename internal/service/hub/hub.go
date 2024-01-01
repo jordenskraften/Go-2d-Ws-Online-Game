@@ -133,3 +133,23 @@ func (h *Hub) BroadcastCanvasDataToUserList(userlist []*ConnItem, messagePayload
 		}
 	}
 }
+
+// -----------
+func (h *Hub) SendLobbiesListToConnestion(conn *ConnItem, lobbies []string) {
+	msg := entities.LobbiesNamesData{
+		Type:  "LobbiesNamesData",
+		Names: lobbies,
+	}
+	log.Println(msg)
+	messageJSON, err := json.Marshal(msg)
+	if err != nil {
+		log.Println("Error marshalling JSON in hub SendLobbiesListToConnestion:", err)
+		return
+	}
+
+	err = conn.conn.WriteMessage(websocket.TextMessage, messageJSON)
+	if err != nil {
+		log.Println("Error sending message to user:", err)
+	}
+	log.Println("SendLobbiesListToConnestion is done:", err)
+}

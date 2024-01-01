@@ -32,18 +32,6 @@ func (ca *Canvas) IsUserInCanvas(name string) bool {
 	return exists
 }
 
-// добавить чела в мап и назначить стартовые коорды
-func (ca *Canvas) AddUser(name string, x float32, y float32) {
-	ca.mu.Lock()
-	defer ca.mu.Unlock()
-
-	ca.Positions[name] = &Position{
-		Username: name,
-		X:        x,
-		Y:        y,
-	}
-}
-
 //удалить чела из коорд мапы
 func (ca *Canvas) RemoveUser(name string) {
 	ca.mu.Lock()
@@ -52,12 +40,42 @@ func (ca *Canvas) RemoveUser(name string) {
 	delete(ca.Positions, name)
 }
 
-//поменять челу коорды
-func (ca *Canvas) ChangeUserCoords(name string, x float32, y float32) {
+func (ca *Canvas) AddUser(name string, x, y float32) {
 	ca.mu.Lock()
 	defer ca.mu.Unlock()
 
-	ca.Positions[name] = &Position{
+	ca.Positions[name] = NewPositionWithBounds(name, x, y)
+}
+
+func (ca *Canvas) ChangeUserCoords(name string, x, y float32) {
+	ca.mu.Lock()
+	defer ca.mu.Unlock()
+
+	ca.Positions[name] = NewPositionWithBounds(name, x, y)
+}
+
+func NewPositionWithBounds(name string, x, y float32) *Position {
+	const (
+		minX = 1
+		maxX = 399
+		minY = 1
+		maxY = 299
+	)
+
+	// Ограничение значений X и Y в заданных диапазонах
+	if x < minX {
+		x = minX
+	} else if x > maxX {
+		x = maxX
+	}
+
+	if y < minY {
+		y = minY
+	} else if y > maxY {
+		y = maxY
+	}
+
+	return &Position{
 		Username: name,
 		X:        x,
 		Y:        y,

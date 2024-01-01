@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>WebSocket JSON Sender</title>
-</head>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <title>WebSocket JSON Sender</title> 
+        </head>
 <body>
     <textarea id="chatMessageInput" rows="5" cols="50">
         {
@@ -36,11 +37,16 @@
     <button onclick="sendLobbyCommand()">Отправить LobbyCommand JSON</button>
     <br><br>
 
-    <canvas id="canvas" width="400" height="300" style="border: 1px solid #000;"></canvas>
-    
-    <textarea id="chatMessagesDisplay" rows="10" cols="50" readonly></textarea>
-
-
+    <div class="container">
+        <div class="left-panel">  
+            <select id="lobbySelect" onchange="sendSelectedLobby()"></select>
+        </div>
+        <div class="right-panel">  
+            <textarea id="chatMessagesDisplay" rows="19" cols="50" readonly></textarea>  
+            <canvas id="canvas" width="400" height="300" style="border: 1px solid #000;"></canvas>  
+        </div>
+    </div>
+     
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
         const canvas = document.getElementById('canvas');
@@ -112,6 +118,36 @@ function sendLobbyCommand() {
             }
         });
 
+        // Функция для заполнения списка активных лобби
+        function fillLobbySelect(lobbyNames) {
+            const lobbySelect = document.getElementById('lobbySelect');
+            lobbySelect.innerHTML = ''; // Очищаем текущие опции
+
+            lobbyNames.forEach(lobbyName => {
+                const option = document.createElement('option');
+                option.value = lobbyName;
+                option.textContent = lobbyName;
+                lobbySelect.appendChild(option);
+            });
+        }
+
+        // Функция для отправки выбранного лобби на сервер
+        function sendSelectedLobby() {
+            const lobbySelect = document.getElementById('lobbySelect');
+            const selectedLobby = lobbySelect.value;
+
+            const lobbyCommand = {
+                type: 'LobbyCommand',
+                LobbyName: selectedLobby
+            };
+
+            try {
+                socket.send(JSON.stringify(lobbyCommand));
+                console.log('Отправлен выбранный лобби:', lobbyCommand);
+            } catch (error) {
+                console.error('Ошибка при отправке выбранного лобби:', error);
+            }
+        }
 
         socket.onmessage = function(event) {
             const message = JSON.parse(event.data); 
@@ -135,13 +171,18 @@ function sendLobbyCommand() {
                 message.positions.forEach(position => {
                     // Рисование куба по координатам
                     ctx.fillStyle = 'black';
-                    ctx.fillRect(position.x, position.y, 20, 20);
+                    ctx.fillRect(position.x - 10, position.y - 10, 20, 20);
 
                     // Отображение имени пользователя над кубом// Отображение имени пользователя над кубом
                     ctx.font = "10px Arial";  
-                    ctx.fillText(position.username, position.x, position.y - 5); // Корректировка координат для отображения текста над кубом
+                    ctx.fillText(position.username, position.x - 15, position.y - 15); // Корректировка координат для отображения текста над кубом
 
                 });
+            }
+            
+            if (messageType === 'LobbiesNamesData') {
+                const lobbyNames = message.lobby_names;
+                fillLobbySelect(lobbyNames); // Заполняем список активных лобби
             }
         }
     </script>

@@ -16,8 +16,8 @@ func main() {
 	MyExchanger := exchanger.NewExchanger(MyHub)
 	MyConnectionsManages := transport.NewConnectionsManager(MyHub, MyExchanger)
 	MyExchanger.CreateLobby("lobby#1")
-	// MyExchanger.CreateLobby("lobby#2")
-	// MyExchanger.CreateLobby("lobby#3")
+	MyExchanger.CreateLobby("another lobby")
+	MyExchanger.CreateLobby("new lobby")
 	// log.Printf("%d, %d, %d", MyExchanger.Lobbies[0].Name, MyExchanger.Lobbies[1].Name, MyExchanger.Lobbies[2].Name)
 	//go testing(MyExchanger)
 	//-----------

@@ -14,6 +14,11 @@ type LobbyCommand struct {
 	LobbyName string `json:"lobby_name"`
 }
 
+type LobbiesNamesData struct {
+	Type  string   `json:"type"`
+	Names []string `json:"lobby_names"`
+}
+
 type ChatMessageData struct {
 	Type     string `json:"type"`
 	Username string `json:"username"`
