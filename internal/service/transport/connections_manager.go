@@ -65,6 +65,7 @@ func (cm *ConnectionsManager) DistributeMessage(username string, msgData map[str
 				LobbyName: lobbyName,
 			}
 			log.Println("Received LobbyCommand object:", message)
+			cm.exchanger.LobbyChangeCommand(conn, lobbyName)
 
 		case "ChatMessage":
 			text, textExists := msgData["text"].(string)

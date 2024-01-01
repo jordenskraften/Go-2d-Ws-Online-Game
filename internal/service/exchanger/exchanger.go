@@ -41,35 +41,6 @@ func (ex *Exchanger) CreateLobby(name string) {
 	ex.Lobbies = append(ex.Lobbies, lobby)
 }
 
-func (ex *Exchanger) AddConnectionToLobby(conn *hub.ConnItem, lobby *lobby.Lobby) {
-	ex.mu.Lock()
-	defer ex.mu.Unlock()
-
-	lobby.AddConnection(conn)
-
-}
-
-func (ex *Exchanger) RemoveСonnectionFromLobby(connName string, lobbyName string) {
-	ex.mu.RLock()
-	defer ex.mu.RUnlock()
-
-	//тут в слайсе находим сперва лобби с именем
-	lobby := ex.GetLobbyByName(lobbyName)
-	if lobby == nil {
-		return
-	}
-	//log.Println(lobby)
-
-	//в хабе аналогично ищем по имени есть ли такой конект
-	conn := ex.Hub.GetConnectionByName(connName)
-	if conn == nil {
-		return
-	}
-	//log.Println(conn)
-
-	lobby.RemoveConnection(connName)
-}
-
 func (ex *Exchanger) GetAllActiveLobbies() []*lobby.Lobby {
 	ex.mu.RLock()
 	defer ex.mu.RUnlock()
@@ -89,8 +60,6 @@ func (ex *Exchanger) GetAnyLobby() *lobby.Lobby {
 }
 
 func (ex *Exchanger) GetLobbyByName(name string) *lobby.Lobby {
-	ex.mu.RLock()
-	defer ex.mu.RUnlock()
 
 	for _, val := range ex.Lobbies {
 		if val.Name == name {
@@ -102,8 +71,6 @@ func (ex *Exchanger) GetLobbyByName(name string) *lobby.Lobby {
 }
 
 func (ex *Exchanger) GetUserLobby(conn *hub.ConnItem) *lobby.Lobby {
-	ex.mu.RLock()
-	defer ex.mu.RUnlock()
 
 	//найти лобби в котором сидит юзер
 	//ключевой метод, пригодится понимать куда отправлять меседж юзера
@@ -120,17 +87,36 @@ func (ex *Exchanger) GetUserLobby(conn *hub.ConnItem) *lobby.Lobby {
 	return nil
 }
 
-func (ex *Exchanger) DeleteUserFromAllLobbies(conn *hub.ConnItem) {
-	ex.mu.RLock()
-	defer ex.mu.RUnlock()
+func (ex *Exchanger) AddConnectionToLobby(conn *hub.ConnItem, lobby *lobby.Lobby) {
+	ex.mu.Lock()
+	defer ex.mu.Unlock()
 
+	lobby.AddConnection(conn)
+	//инфу всем в лобби о новичке
+	ex.BroadcastPositionMessage(conn, entities.NewPositionRandomCoords(conn.Name))
+	ex.BroadcastChatUserStatus(lobby, conn.Name, true)
+
+}
+
+func (ex *Exchanger) DeleteUserFromAllLobbies(conn *hub.ConnItem) {
 	for {
 		lobby := ex.GetUserLobby(conn)
 		if lobby == nil {
 			return
+		} else {
+			ex.RemoveСonnectionFromLobby(conn.Name, lobby)
 		}
-		lobby.RemoveConnection(conn.Name)
 	}
+}
+
+func (ex *Exchanger) RemoveСonnectionFromLobby(connName string, lobby *lobby.Lobby) {
+	ex.mu.Lock()
+	defer ex.mu.Unlock()
+
+	lobby.RemoveConnection(connName)
+	//инфу всем в лобби о ливере
+	ex.BroadcastCanvasInfo(lobby)
+	ex.BroadcastChatUserStatus(lobby, connName, false)
 }
 
 func (ex *Exchanger) SetupConnection(conn *hub.ConnItem) {
@@ -153,22 +139,23 @@ func (ex *Exchanger) SetupConnection(conn *hub.ConnItem) {
 		}
 	}
 
-	lobby.AddConnection(conn)
-	log.Printf("user %s added to lobby %s, lobby have that user? = %s\n", conn.Name, lobby.Name, lobby.Connections[conn.Name].Name)
-	//вот здесь надо список лобби взять и отдать конекшну
+	ex.SetUserLobby(conn, lobby.Name)
+	log.Printf("user %s added to lobby %s, lobby have that user? %s\n", conn.Name, lobby.Name, lobby.Connections[conn.Name].Name)
+}
+
+func (ex *Exchanger) GetLobbiesNamesList() []string {
 	lobbies := ex.GetAllActiveLobbies()
 	lobbiesNames := make([]string, 0, len(lobbies))
 	for _, val := range lobbies {
 		lobbiesNames = append(lobbiesNames, val.Name)
 	}
-	log.Println(lobbiesNames)
-	ex.Hub.SendLobbiesListToConnestion(conn, lobbiesNames)
+	return lobbiesNames
 }
 
 //метод который будет переключать юзеру лобби
 
-func (ex *Exchanger) ChangeUserLobby(conn *hub.ConnItem, lobbyName string) {
-	log.Printf("changing lobby to user with name %s \n", conn.Name)
+func (ex *Exchanger) SetUserLobby(conn *hub.ConnItem, lobbyName string) {
+	log.Printf("set lobby to user with name %s \n", conn.Name)
 	// проверить активен ли конект в хабе
 	inHub := ex.Hub.IsConnectionInHub(conn.Name)
 	if !inHub {
@@ -185,12 +172,34 @@ func (ex *Exchanger) ChangeUserLobby(conn *hub.ConnItem, lobbyName string) {
 	// добавить юзера в лобби
 	if inHub && lobby != nil {
 		ex.DeleteUserFromAllLobbies(conn)
-		ex.AddConnectionToLobby(conn, lobby)
-		log.Printf("added user %s to lobby \n", conn.Name, lobby.Name)
 	} else {
 		log.Println("lobby or connection is wrong")
 	}
+
+	ex.AddConnectionToLobby(conn, lobby)
+	log.Printf("added user %s to lobby %s \n", conn.Name, lobby.Name)
+	//вот здесь надо список лобби взять и отдать конекшну
+	lobbiesNames := ex.GetLobbiesNamesList()
+	log.Printf("active lobbies names list: %v", lobbiesNames)
+	ex.Hub.SendLobbiesListToConnestion(conn, lobbiesNames, lobby.Name)
 	log.Printf("finished changing lobby to user with name %s \n", conn.Name)
+
+}
+
+// --------------
+
+func (ex *Exchanger) LobbyChangeCommand(conn *hub.ConnItem, lobbyName string) {
+	curLobby := ex.GetUserLobby(conn)
+	if curLobby == nil {
+		log.Printf("no lobbies with name %s for user %s", lobbyName, conn.Name)
+		return
+	} else {
+		if curLobby.Name == lobbyName {
+			log.Printf("breaking change lobby, user %s already in lobby %s", conn.Name, lobbyName)
+			return
+		}
+		ex.SetUserLobby(conn, lobbyName)
+	}
 }
 
 // --------------
@@ -251,4 +260,41 @@ func (ex *Exchanger) BroadcastPositionMessage(conn *hub.ConnItem, msg *entities.
 		ex.Hub.BroadcastCanvasDataToUserList(lobbyUsers, canvasMsg)
 
 	}
+}
+func (ex *Exchanger) BroadcastCanvasInfo(lobby *lobby.Lobby) {
+	canvas := lobby.Canvas
+	//теперь надо дернуть хаб чтобы он всем распространил месейдж
+	lobbyUsers := lobby.GetActiveConnectionsList()
+	canvasInfo := canvas.GetCanvasInfo()
+	canvasMsg := entities.CanvasMessageData{
+		Type:      "CanvasMessageData",
+		Positions: []entities.Position{},
+	}
+	for _, val := range canvasInfo {
+		canvasMsg.Positions = append(canvasMsg.Positions,
+			entities.Position{
+				Username: val.Username,
+				X:        val.X,
+				Y:        val.Y,
+			})
+	}
+
+	ex.Hub.BroadcastCanvasDataToUserList(lobbyUsers, canvasMsg)
+
+}
+
+func (ex *Exchanger) BroadcastChatUserStatus(lobby *lobby.Lobby, name string, status bool) {
+	//определяем лобби юзера
+	//достаем чат лобби
+	chat := lobby.Chat
+	// записываем в него меседж
+	text := "has entered chat " + lobby.Name
+	if !status {
+		text = "has left chat" + lobby.Name
+	}
+	chatMsg := chat.AddChatMessage(name, text)
+	// достаем список активных конектов в лобби
+	lobbyUsers := lobby.GetActiveConnectionsList()
+	ex.Hub.BroadcastChatMessageToUserList(lobbyUsers, chatMsg.Username, chatMsg.Text, "")
+
 }

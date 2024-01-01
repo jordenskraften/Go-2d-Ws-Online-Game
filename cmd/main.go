@@ -16,7 +16,7 @@ func main() {
 	MyExchanger := exchanger.NewExchanger(MyHub)
 	MyConnectionsManages := transport.NewConnectionsManager(MyHub, MyExchanger)
 	MyExchanger.CreateLobby("lobby#1")
-	MyExchanger.CreateLobby("another lobby")
+	MyExchanger.CreateLobby("lobby another")
 	MyExchanger.CreateLobby("new lobby")
 	// log.Printf("%d, %d, %d", MyExchanger.Lobbies[0].Name, MyExchanger.Lobbies[1].Name, MyExchanger.Lobbies[2].Name)
 	//go testing(MyExchanger)
@@ -43,7 +43,7 @@ func testing(ex *exchanger.Exchanger) {
 		log.Println("текущее лобби клиента " + conn.Name + " " + curLob.Name)
 		//--------
 		//сменим лобби
-		ex.ChangeUserLobby(conn, "lobby#1")
+		ex.SetUserLobby(conn, "lobby#1")
 		curLob = ex.GetUserLobby(conn)
 		log.Println(lobby.Connections)
 		log.Println(curLob.Connections)

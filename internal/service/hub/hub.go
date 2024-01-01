@@ -135,10 +135,11 @@ func (h *Hub) BroadcastCanvasDataToUserList(userlist []*ConnItem, messagePayload
 }
 
 // -----------
-func (h *Hub) SendLobbiesListToConnestion(conn *ConnItem, lobbies []string) {
+func (h *Hub) SendLobbiesListToConnestion(conn *ConnItem, lobbies []string, currentLobby string) {
 	msg := entities.LobbiesNamesData{
-		Type:  "LobbiesNamesData",
-		Names: lobbies,
+		Type:         "LobbiesNamesData",
+		Names:        lobbies,
+		CurrentLobby: currentLobby,
 	}
 	log.Println(msg)
 	messageJSON, err := json.Marshal(msg)

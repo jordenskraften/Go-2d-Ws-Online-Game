@@ -4,6 +4,17 @@
         <head>
             <meta charset="UTF-8">
             <title>WebSocket JSON Sender</title> 
+            
+            <style>
+                /* Стили для lobbyTextInfo */
+                #lobbyContainer {
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                    padding: 10px;    
+                }
+            </style>
+
         </head>
 <body>
     <textarea id="chatMessageInput" rows="5" cols="50">
@@ -39,7 +50,11 @@
 
     <div class="container">
         <div class="left-panel">  
-            <select id="lobbySelect" onchange="sendSelectedLobby()"></select>
+            <div id="lobbyContainer">
+                <div id="lobbyTextInfo">Текущее лобби</div>
+                <select id="lobbySelect"></select>
+                <button onclick="sendSelectedLobby()">Сменить лобби</button>
+            </div>
         </div>
         <div class="right-panel">  
             <textarea id="chatMessagesDisplay" rows="19" cols="50" readonly></textarea>  
@@ -50,6 +65,7 @@
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
         const canvas = document.getElementById('canvas');
+        const lobbyTextInfo = document.getElementById('lobbyTextInfo');
  
 // Функция для отправки ChatMessage
 function sendChatMessage() {
@@ -128,7 +144,7 @@ function sendLobbyCommand() {
                 option.value = lobbyName;
                 option.textContent = lobbyName;
                 lobbySelect.appendChild(option);
-            });
+            }); 
         }
 
         // Функция для отправки выбранного лобби на сервер
@@ -143,7 +159,7 @@ function sendLobbyCommand() {
 
             try {
                 socket.send(JSON.stringify(lobbyCommand));
-                console.log('Отправлен выбранный лобби:', lobbyCommand);
+                console.log('Отправлен выбранный лобби:', lobbyCommand);  
             } catch (error) {
                 console.error('Ошибка при отправке выбранного лобби:', error);
             }
@@ -179,10 +195,12 @@ function sendLobbyCommand() {
 
                 });
             }
-            
+             
+
             if (messageType === 'LobbiesNamesData') {
                 const lobbyNames = message.lobby_names;
-                fillLobbySelect(lobbyNames); // Заполняем список активных лобби
+                fillLobbySelect(lobbyNames); // Заполняем список активных лобби 
+                lobbyTextInfo.textContent = message.current_lobby; 
             }
         }
     </script>
