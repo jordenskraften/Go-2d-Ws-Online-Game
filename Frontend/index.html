@@ -12,42 +12,12 @@
                     font-weight: bold;
                     margin-bottom: 10px;
                     padding: 10px;    
-                }
+                } 
             </style>
 
         </head>
-<body>
-    <textarea id="chatMessageInput" rows="5" cols="50">
-        {
-            "type": "ChatMessage",  
-            "text": "Hello, world!"
-        }
-    </textarea>
-    <br>
-    <button onclick="sendChatMessage()">Отправить ChatMessage JSON</button>
-    <br><br>
-
-    <textarea id="positionInput" rows="5" cols="50">
-        {
-            "type": "Position", 
-            "x": 11,
-            "y": 22
-        }
-    </textarea>
-    <br>
-    <button onclick="sendPosition()">Отправить Canvas JSON</button>
-    <br><br>
-
-    <textarea id="lobbyCommand" rows="5" cols="50">
-        {
-            "type": "LobbyCommand", 
-            "LobbyName": "lobby#1"
-        }
-    </textarea>
-    <br>
-    <button onclick="sendLobbyCommand()">Отправить LobbyCommand JSON</button>
-    <br><br>
-
+<body> 
+  
     <div class="container">
         <div class="left-panel">  
             <div id="lobbyContainer">
@@ -55,65 +25,51 @@
                 <select id="lobbySelect"></select>
                 <button onclick="sendSelectedLobby()">Сменить лобби</button>
             </div>
+            
+            <div id="chatContainer">
+                <div id="chatInputContainer">
+                    <textarea id="chatMessageInput" rows="4" cols="50"></textarea> 
+                </div>
+                <div id="chatSendButton">
+                    <button onclick="sendChatMessage()">Отправить сообщение в чат</button> 
+                </div>
+                <div id="chatDisplay">
+                    <textarea id="chatMessagesDisplay" rows="19" cols="50" readonly></textarea>
+                </div>
+            </div>
         </div>
-        <div class="right-panel">  
-            <textarea id="chatMessagesDisplay" rows="19" cols="50" readonly></textarea>  
+        <div class="right-panel">      
             <canvas id="canvas" width="400" height="300" style="border: 1px solid #000;"></canvas>  
         </div>
     </div>
+    
      
     <script>
         const socket = new WebSocket('ws://localhost:8080/ws');
         const canvas = document.getElementById('canvas');
         const lobbyTextInfo = document.getElementById('lobbyTextInfo');
  
-// Функция для отправки ChatMessage
-function sendChatMessage() {
-    const chatMessageInput = document.getElementById('chatMessageInput').value;
+        // Функция для отправки ChatMessage
+        function sendChatMessage() {
+            const chatMessageInput = document.getElementById('chatMessageInput').value;
+            if (chatMessageInput == "") {
+                return;
+            } else {
+                const jsonChatMessage = {
+                    "type": "ChatMessage",
+                    "text": chatMessageInput
+                };
 
-    try {
-        const chatMessageJson = JSON.parse(chatMessageInput);
-        console.log('Отправляемый ChatMessage JSON:', chatMessageJson); // Добавленная строка
-
-        socket.send(JSON.stringify(chatMessageJson));
-        console.log('Отправлено ChatMessage:', chatMessageJson);
-    } catch (error) {
-        console.error('Ошибка при отправке ChatMessage:', error);
-    }
-}
-
-// Функция для отправки Canvas
-function sendPosition() {
-    const positionInput = document.getElementById('positionInput').value;
-
-    try {
-        const positionInputJson = JSON.parse(positionInput);
-        console.log('Отправляемый PositionInput JSON:', positionInputJson); // Добавленная строка
-
-        socket.send(JSON.stringify(positionInputJson));
-        console.log('Отправлено PositionInput:', positionInputJson);
-    } catch (error) {
-        console.error('Ошибка при отправке PositionInput:', error);
-    }
-}
-
-// Функция для отправки LobbyCommand
-function sendLobbyCommand() {
-    const lobbyCommandInput = document.getElementById('lobbyCommand').value;
-
-    try {
-        const lobbyCommandInputJson = JSON.parse(lobbyCommandInput);
-        console.log('Отправляемый lobbyInput JSON:', lobbyCommandInputJson); // Добавленная строка
-
-        socket.send(JSON.stringify(lobbyCommandInputJson));
-        console.log('Отправлено lobbyInput:', lobbyCommandInputJson);
-    } catch (error) {
-        console.error('Ошибка при отправке lobbyInput:', error);
-    }
-}
-
-        // Остальной код для обработки WebSocket остается тем же
-        // ...
+                try {
+                    console.log('Отправляемый ChatMessage JSON:', jsonChatMessage);
+                    socket.send(JSON.stringify(jsonChatMessage));
+                    console.log('Отправлено ChatMessage:', jsonChatMessage);
+                } catch (error) {
+                    console.error('Ошибка при отправке ChatMessage:', error);
+                }
+            }
+        }
+  
          // Добавляем обработчик события клика на канвасе
         canvas.addEventListener('click', function(event) {
             const rect = canvas.getBoundingClientRect();
@@ -151,20 +107,26 @@ function sendLobbyCommand() {
         function sendSelectedLobby() {
             const lobbySelect = document.getElementById('lobbySelect');
             const selectedLobby = lobbySelect.value;
+            const currentLobby = lobbyTextInfo.textContent
+            console.log(currentLobby+" "+selectedLobby)
+            if (currentLobby == selectedLobby) {
+                console.log("same lobby")
+            } else {
+                const lobbyCommand = {
+                    type: 'LobbyCommand',
+                    LobbyName: selectedLobby
+                };
 
-            const lobbyCommand = {
-                type: 'LobbyCommand',
-                LobbyName: selectedLobby
-            };
-
-            try {
-                socket.send(JSON.stringify(lobbyCommand));
-                console.log('Отправлен выбранный лобби:', lobbyCommand);  
-            } catch (error) {
-                console.error('Ошибка при отправке выбранного лобби:', error);
+                try {
+                    socket.send(JSON.stringify(lobbyCommand));
+                    console.log('Отправлен выбранный лобби:', lobbyCommand);  
+                } catch (error) {
+                    console.error('Ошибка при отправке выбранного лобби:', error);
+                }
             }
         }
 
+        //слушаем сервер
         socket.onmessage = function(event) {
             const message = JSON.parse(event.data); 
             const messageType = message.type;
@@ -196,7 +158,7 @@ function sendLobbyCommand() {
                 });
             }
              
-
+            //получаем список имен лобби для выбора
             if (messageType === 'LobbiesNamesData') {
                 const lobbyNames = message.lobby_names;
                 fillLobbySelect(lobbyNames); // Заполняем список активных лобби 
