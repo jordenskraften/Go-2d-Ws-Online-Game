@@ -13,7 +13,7 @@ RUN go build -o ./bin/app cmd/main.go
 FROM alpine
 
 COPY --from=builder /usr/local/src/bin/app /cmd/
-COPY frontend/index.html /frontend/
+COPY ./frontend/index.html /frontend/
 
 EXPOSE 8080  
 
