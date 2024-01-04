@@ -8,7 +8,6 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -81,14 +80,8 @@ func ServeWs(hub *hub.Hub, cm *ConnectionsManager, w http.ResponseWriter, r *htt
 	cm.SetupUser(wsConn.Name, *wsConn.hub)
 	defer cm.RemoveUser(wsConn.Name, *wsConn.hub)
 
-	//цикл прослушки
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		wsConn.ReadLoop(cm)
-	}()
-	wg.Wait() // Ждем завершения работы горутины ReadLoop перед закрытием соединения
+	//конект не закроется пока работает этот бесконечный цикл чтения
+	wsConn.ReadLoop(cm)
 }
 
 func (wsCon *WsConnection) ReadLoop(cm *ConnectionsManager) {

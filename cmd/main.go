@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/exchanger"
 	"github.com/jordenskraften/Go-2d-Ws-Online-Game/internal/service/hub"
@@ -15,51 +15,34 @@ func main() {
 	//------------
 	MyExchanger := exchanger.NewExchanger(MyHub)
 	MyConnectionsManages := transport.NewConnectionsManager(MyHub, MyExchanger)
-	MyExchanger.CreateLobby("lobby#1")
-	MyExchanger.CreateLobby("lobby another")
-	MyExchanger.CreateLobby("new lobby")
-	// log.Printf("%d, %d, %d", MyExchanger.Lobbies[0].Name, MyExchanger.Lobbies[1].Name, MyExchanger.Lobbies[2].Name)
-	//go testing(MyExchanger)
+	MyExchanger.CreateLobby("start at #1 lobby")
+	MyExchanger.CreateLobby("#2 lobby another")
+	MyExchanger.CreateLobby("new #3 lobby")
 	//-----------
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+
+	//-----------
+	mux := http.NewServeMux()
+
+	// Обработчик для веб-сокетов
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		transport.ServeWs(MyHub, MyConnectionsManages, w, r)
 	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
 
-}
-
-func testing(ex *exchanger.Exchanger) {
-	time.Sleep(5 * time.Second)
-
-	lobby := ex.GetAnyLobby()
-	conn := ex.Hub.GetAnyConnection()
-	log.Println("================================")
-	log.Println("лобби и конект " + lobby.Name + " " + conn.Name)
-	if lobby != nil && conn != nil {
-		ex.AddConnectionToLobby(conn, lobby)
-		log.Printf("удалось добавить конект %s в любое %s", conn.Name, lobby.Name)
-		log.Println(lobby.Connections)
-		curLob := ex.GetUserLobby(conn)
-		log.Println("текущее лобби клиента " + conn.Name + " " + curLob.Name)
-		//--------
-		//сменим лобби
-		ex.SetUserLobby(conn, "lobby#1")
-		curLob = ex.GetUserLobby(conn)
-		log.Println(lobby.Connections)
-		log.Println(curLob.Connections)
-		log.Println("текущее лобби клиента " + conn.Name + " " + curLob.Name)
-		//
-		log.Println("теперь удалим этот конект с лобби")
-		//ex.DeleteUserFromAllLobbies(conn)
-		curLob.RemoveConnection(conn.Name)
-		log.Println(lobby.Connections)
-		//
-		curLob = ex.GetUserLobby(conn)
-		if curLob != nil {
-			log.Println(curLob.Name)
-		}
-		log.Println("================================")
-	} else {
-		log.Println("не удалось добавить любой конект в любое лобби")
+	// Путь до папки, содержащей index.html
+	basePath := "../frontend/"
+	envBasePath := os.Getenv("FRONTEND_PATH")
+	if envBasePath != "" {
+		basePath = envBasePath
 	}
+	log.Printf("frontendPath: %s", basePath)
+
+	// Создаем обработчик для статических файлов
+	fs := http.FileServer(http.Dir(basePath))
+
+	// Определяем путь для обработчика файлов
+	mux.Handle("/", http.StripPrefix("/", fs))
+
+	// Запуск сервера
+	port := ":8080"
+	log.Fatal(http.ListenAndServe(port, mux))
 }

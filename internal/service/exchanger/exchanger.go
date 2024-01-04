@@ -87,14 +87,20 @@ func (ex *Exchanger) GetUserLobby(conn *hub.ConnItem) *lobby.Lobby {
 	return nil
 }
 
-func (ex *Exchanger) AddConnectionToLobby(conn *hub.ConnItem, lobby *lobby.Lobby) {
+func (ex *Exchanger) AddConnectionToLobby(conn *hub.ConnItem, lo *lobby.Lobby) {
 	ex.mu.Lock()
 	defer ex.mu.Unlock()
 
-	lobby.AddConnection(conn)
+	lo.AddConnection(conn)
 	//инфу всем в лобби о новичке
-	ex.BroadcastPositionMessage(conn, entities.NewPositionRandomCoords(conn.Name))
-	ex.BroadcastChatUserStatus(lobby, conn.Name, true)
+	canvasPos := lobby.NewPositionRandomCoords(conn.Name)
+	msgPos := &entities.Position{
+		Username: canvasPos.Username,
+		X:        canvasPos.X,
+		Y:        canvasPos.Y,
+	}
+	ex.BroadcastPositionMessage(conn, msgPos)
+	ex.BroadcastChatUserStatus(lo, conn.Name, true)
 
 }
 

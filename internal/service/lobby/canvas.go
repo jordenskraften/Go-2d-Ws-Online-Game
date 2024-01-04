@@ -1,6 +1,10 @@
 package lobby
 
-import "sync"
+import (
+	"math/rand"
+	"sync"
+	"time"
+)
 
 type Canvas struct {
 	Name      string
@@ -13,6 +17,13 @@ type Position struct {
 	X        float32
 	Y        float32
 }
+
+const (
+	minX = 1
+	maxX = 399
+	minY = 1
+	maxY = 299
+)
 
 func NewCanvas(name string) *Canvas {
 	return &Canvas{
@@ -32,7 +43,7 @@ func (ca *Canvas) IsUserInCanvas(name string) bool {
 	return exists
 }
 
-//удалить чела из коорд мапы
+// удалить чела из коорд мапы
 func (ca *Canvas) RemoveUser(name string) {
 	ca.mu.Lock()
 	defer ca.mu.Unlock()
@@ -55,12 +66,6 @@ func (ca *Canvas) ChangeUserCoords(name string, x, y float32) {
 }
 
 func NewPositionWithBounds(name string, x, y float32) *Position {
-	const (
-		minX = 1
-		maxX = 399
-		minY = 1
-		maxY = 299
-	)
 
 	// Ограничение значений X и Y в заданных диапазонах
 	if x < minX {
@@ -79,6 +84,19 @@ func NewPositionWithBounds(name string, x, y float32) *Position {
 		Username: name,
 		X:        x,
 		Y:        y,
+	}
+}
+
+func NewPositionRandomCoords(name string) *Position {
+	rand.Seed(time.Now().UnixNano())
+
+	randomX := float32(rand.Intn(maxX-minX+1) + minX)
+
+	randomY := float32(rand.Intn(maxY-minY+1) + minY)
+	return &Position{
+		Username: name,
+		X:        randomX,
+		Y:        randomY,
 	}
 }
 
